@@ -1,0 +1,287 @@
+{
+  "name": "gemini-context",
+  "version": "1.0.0",
+  "description": "MCP server for adding Gemini context management with both session-based context and API caching",
+  "capabilities": {
+    "tools": true
+  },
+  "tools": [
+    {
+      "name": "generate_text",
+      "description": "Generate text using Gemini with session-based context management",
+      "parameters": {
+        "sessionId": {
+          "type": "string",
+          "description": "Unique identifier for the conversation session"
+        },
+        "message": {
+          "type": "string",
+          "description": "The user's message to process"
+        }
+      },
+      "examples": [
+        {
+          "parameters": {
+            "sessionId": "user-123",
+            "message": "What is machine learning?"
+          },
+          "description": "Basic question in a new session"
+        },
+        {
+          "parameters": {
+            "sessionId": "user-123",
+            "message": "What are some common algorithms used for it?"
+          },
+          "description": "Follow-up question in the same session"
+        }
+      ]
+    },
+    {
+      "name": "get_context",
+      "description": "Retrieve the current context for a session including all messages",
+      "parameters": {
+        "sessionId": {
+          "type": "string",
+          "description": "Unique identifier for the conversation session"
+        }
+      },
+      "examples": [
+        {
+          "parameters": {
+            "sessionId": "user-123"
+          },
+          "description": "Get all context in a session"
+        }
+      ]
+    },
+    {
+      "name": "clear_context",
+      "description": "Clear the context for a session, removing all stored messages",
+      "parameters": {
+        "sessionId": {
+          "type": "string",
+          "description": "Unique identifier for the conversation session"
+        }
+      },
+      "examples": [
+        {
+          "parameters": {
+            "sessionId": "user-123"
+          },
+          "description": "Clear all conversation history in a session"
+        }
+      ]
+    },
+    {
+      "name": "add_context",
+      "description": "Add a new entry to the context without generating a response",
+      "parameters": {
+        "content": {
+          "type": "string",
+          "description": "The content to add to context"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "assistant", "system"],
+          "description": "Role of the context entry"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "topic": {
+              "type": "string",
+              "description": "Topic for context organization"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Tags for context categorization"
+            }
+          },
+          "description": "Metadata for context tracking"
+        }
+      },
+      "examples": [
+        {
+          "parameters": {
+            "content": "I have a cat named Whiskers.",
+            "role": "user",
+            "metadata": {
+              "topic": "pets",
+              "tags": ["cat", "personal"]
+            }
+          },
+          "description": "Add user information with metadata"
+        },
+        {
+          "parameters": {
+            "content": "The user should be given concise responses.",
+            "role": "system",
+            "metadata": {
+              "topic": "preferences"
+            }
+          },
+          "description": "Add system instruction"
+        }
+      ]
+    },
+    {
+      "name": "search_context",
+      "description": "Search for relevant context using semantic similarity",
+      "parameters": {
+        "query": {
+          "type": "string",
+          "description": "The search query to find relevant context"
+        },
+        "limit": {
+          "type": "number",
+          "description": "Maximum number of context entries to return"
+        }
+      },
+      "examples": [
+        {
+          "parameters": {
+            "query": "pets"
+          },
+          "description": "Find all context entries related to pets"
+        },
+        {
+          "parameters": {
+            "query": "financial data",
+            "limit": 5
+          },
+          "description": "Find up to 5 entries related to financial data"
+        }
+      ]
+    },
+    {
+      "name": "mcp_gemini_context_create_cache",
+      "description": "Create a cache for frequently used large contexts for API-level caching (min 32K tokens recommended)",
+      "parameters": {
+        "displayName": {
+          "type": "string",
+          "description": "Friendly name for the cache"
+        },
+        "content": {
+          "type": "string",
+          "description": "Large context to cache (system instructions, documents, etc)"
+        },
+        "ttlSeconds": {
+          "type": "number",
+          "description": "Time to live in seconds (default: 3600)"
+        }
+      },
+      "examples": [
+        {
+          "parameters": {
+            "displayName": "Financial Analysis System",
+            "content": "You are a specialized AI assistant for analyzing financial data...",
+            "ttlSeconds": 3600
+          },
+          "description": "Create a cache for financial analysis prompts"
+        }
+      ]
+    },
+    {
+      "name": "mcp_gemini_context_generate_with_cache",
+      "description": "Generate content using a cached context for cost optimization",
+      "parameters": {
+        "cacheName": {
+          "type": "string",
+          "description": "The cache name/ID from createCache"
+        },
+        "userPrompt": {
+          "type": "string",
+          "description": "The user prompt to append to the cached context"
+        }
+      },
+      "examples": [
+        {
+          "parameters": {
+            "cacheName": "abc123",
+            "userPrompt": "Explain what a P/E ratio is in simple terms."
+          },
+          "description": "Generate a response using a cached financial context"
+        }
+      ]
+    },
+    {
+      "name": "mcp_gemini_context_list_caches",
+      "description": "List all available caches",
+      "parameters": {},
+      "examples": [
+        {
+          "parameters": {},
+          "description": "List all available caches"
+        }
+      ]
+    },
+    {
+      "name": "mcp_gemini_context_update_cache_ttl",
+      "description": "Updates a cache's TTL (time to live)",
+      "parameters": {
+        "cacheName": {
+          "type": "string",
+          "description": "Cache name/ID"
+        },
+        "ttlSeconds": {
+          "type": "number",
+          "description": "New TTL in seconds"
+        }
+      },
+      "examples": [
+        {
+          "parameters": {
+            "cacheName": "abc123",
+            "ttlSeconds": 7200
+          },
+          "description": "Extend cache TTL to 2 hours"
+        }
+      ]
+    },
+    {
+      "name": "mcp_gemini_context_delete_cache",
+      "description": "Deletes a cache",
+      "parameters": {
+        "cacheName": {
+          "type": "string",
+          "description": "Cache name/ID"
+        }
+      },
+      "examples": [
+        {
+          "parameters": {
+            "cacheName": "abc123"
+          },
+          "description": "Delete a cache that is no longer needed"
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "context_management": {
+      "description": "Session-based context management for conversations",
+      "workflow": [
+        "1. Start with generate_text providing a sessionId",
+        "2. Continue the conversation using the same sessionId",
+        "3. Use get_context to retrieve conversation history",
+        "4. Use clear_context when starting a new topic"
+      ]
+    },
+    "api_caching": {
+      "description": "API-level caching for cost optimization with large contexts",
+      "workflow": [
+        "1. Create a cache with mcp_gemini_context_create_cache",
+        "2. Generate responses using mcp_gemini_context_generate_with_cache",
+        "3. Update TTL with mcp_gemini_context_update_cache_ttl if needed",
+        "4. Delete cache with mcp_gemini_context_delete_cache when done"
+      ],
+      "requirements": [
+        "Minimum context size of 32K tokens recommended for cost benefits",
+        "Must use a stable model version (e.g., gemini-1.5-pro-001)"
+      ]
+    }
+  }
+} 

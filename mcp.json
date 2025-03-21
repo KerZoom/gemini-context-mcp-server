@@ -1,0 +1,17 @@
+{
+  "name": "gemini-context",
+  "version": "1.0.0",
+  "description": "Gemini context management and caching MCP server",
+  "entrypoint": "dist/mcp-server.js",
+  "type": "mcp",
+  "command": "npm",
+  "args": ["start"],
+  "capabilities": {
+    "completion": true,
+    "execute": true,
+    "filesystem": false,
+    "tools": true
+  },
+  "manifestPath": "mcp-manifest.json",
+  "documentation": "README-MCP.md"
+} 
