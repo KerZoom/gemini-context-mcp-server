@@ -5,7 +5,7 @@ A powerful MCP (Model Context Protocol) server implementation that leverages Gem
 ## 🚀 Features
 
 ### Context Management
-- **2M token context window support** - Leverage Gemini's extensive context capabilities
+- **Up to 2M token context window support** - Leverage Gemini's extensive context capabilities
 - **Session-based conversations** - Maintain conversational state across multiple interactions
 - **Smart context tracking** - Add, retrieve, and search context with metadata
 - **Semantic search** - Find relevant context using semantic similarity

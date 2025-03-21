@@ -7,6 +7,24 @@ async function testDiscoverCapabilities() {
     try {
         // Call the loadManifest function directly
         const manifest = loadManifest();
+
+        const apiKey = 'YOUR_GEMINI_API_KEY';
+        console.log('Initializing Gemini API...');
+        const genAI = new GoogleGenerativeAI(apiKey);
+
+        console.log('Creating model...');
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-2.0-flash",
+            generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.9,
+                maxOutputTokens: 8192,
+            }
+        });
+
+        console.log('Sending message...');
+        const result = await model.generateContent("What is 2+2?");
         
         if (manifest) {
             console.log('Manifest loaded successfully!');
@@ -22,3 +40,4 @@ async function testDiscoverCapabilities() {
 
 // Run the test
 testDiscoverCapabilities();
+main();
