@@ -2,13 +2,13 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 async function main() {
     try {
-        const apiKey = 'AIzaSyC0doA0jnE8CPyESrk6hL0IEoR_uYTAqO8';
+        const apiKey = 'YOUR_GEMINI_API_KEY';
         console.log('Initializing Gemini API...');
         const genAI = new GoogleGenerativeAI(apiKey);
 
         console.log('Creating model...');
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.0-pro-exp-02-05",
+            model: "gemini-2.0-flash",
             generationConfig: {
                 temperature: 0.7,
                 topK: 40,
