@@ -1,11 +1,18 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { HttpServerTransport } from '@modelcontextprotocol/sdk/server/http.js';
 import { z } from 'zod';
 import { GeminiContextServer } from './gemini-context-server.js';
 import { Logger } from './utils/logger.js';
 import { config } from './config.js';
 import fs from 'fs';
 import path from 'path';
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const httpMode = args.includes('--http');
+const portIndex = args.indexOf('--port');
+const port = portIndex !== -1 && portIndex + 1 < args.length ? parseInt(args[portIndex + 1], 10) : 3000;
 
 // Fallback manifest in case file loading fails
 const FALLBACK_MANIFEST = {
@@ -583,7 +590,26 @@ export async function startServer() {
         );
 
         // Create and connect transport
-        const transport = new StdioServerTransport();
+        let transport;
+        if (httpMode) {
+            Logger.info(`Starting in HTTP mode on port ${port}`);
+            transport = new HttpServerTransport({
+                port: port,
+                cors: {
+                    origin: "*",
+                    methods: ["GET", "POST", "OPTIONS"],
+                    allowedHeaders: ["Content-Type"]
+                }
+            });
+            
+            // Log server URL
+            console.log(`\n🚀 MCP server running in HTTP mode at http://localhost:${port}`);
+            console.log(`Configuration: Use endpoint http://localhost:${port}/mcp in your MCP client\n`);
+        } else {
+            Logger.info('Starting in stdio mode');
+            transport = new StdioServerTransport();
+        }
+        
         await server.connect(transport);
 
         // Handle cleanup

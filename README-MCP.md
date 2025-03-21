@@ -31,6 +31,42 @@ MCP (Model Context Protocol) is a standard for AI model communication. It allows
    node dist/mcp-server.js
    ```
 
+### Simplified Client Installation
+
+We provide a convenient CLI tool to simplify the installation and configuration process for specific MCP clients:
+
+```bash
+# Install for Cursor
+npm run install:cursor
+
+# Install for Claude Desktop
+npm run install:claude
+
+# Install for VS Code
+npm run install:vscode
+
+# Install for generic MCP clients
+npm run install:generic
+```
+
+You can also run the CLI tool directly with custom options:
+
+```bash
+# Install with custom port (default: 3000)
+node dist/install-client.js install claude --port 8080
+
+# Install to a specific directory
+node dist/install-client.js install vscode --directory /path/to/directory
+
+# Skip building the project
+node dist/install-client.js install cursor --no-build
+```
+
+The tool will:
+1. Configure the appropriate settings for your chosen client
+2. Create necessary startup scripts
+3. Provide step-by-step instructions for completing the setup
+
 ### Integration with Cursor
 
 Cursor supports MCP servers. To connect this server to Cursor:

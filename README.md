@@ -60,6 +60,23 @@ This MCP server can be integrated with various MCP-compatible clients:
 
 For detailed integration instructions with each client, see the [MCP Client Configuration Guide](README-MCP.md#-configuring-with-popular-mcp-clients) in the MCP documentation.
 
+#### Quick Client Setup
+
+Use our simplified client installation commands:
+
+```bash
+# Install and configure for Claude Desktop
+npm run install:claude
+
+# Install and configure for Cursor
+npm run install:cursor
+
+# Install and configure for VS Code
+npm run install:vscode
+```
+
+Each command sets up the appropriate configuration files and provides instructions for completing the integration.
+
 ## 💻 Usage Examples
 
 ### For Beginners
