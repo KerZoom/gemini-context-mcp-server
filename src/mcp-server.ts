@@ -7,6 +7,174 @@ import { config } from './config.js';
 import fs from 'fs';
 import path from 'path';
 
+// Fallback manifest in case file loading fails
+const FALLBACK_MANIFEST = {
+    "name": "gemini-context",
+    "version": "1.0.0",
+    "description": "MCP server for adding Gemini context management with both session-based context and API caching",
+    "capabilities": {
+        "tools": true
+    },
+    "tools": [
+        {
+            "name": "mcp_gemini_context_generate_text",
+            "description": "Generate text using Gemini with context management",
+            "parameters": {
+                "sessionId": {
+                    "type": "string",
+                    "description": "Session ID for context management"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Message to process"
+                }
+            }
+        },
+        {
+            "name": "mcp_gemini_context_get_context",
+            "description": "Retrieve the current context for a session",
+            "parameters": {
+                "sessionId": {
+                    "type": "string",
+                    "description": "Session ID to retrieve context for"
+                }
+            }
+        },
+        {
+            "name": "mcp_gemini_context_clear_context",
+            "description": "Clear the context for a session",
+            "parameters": {
+                "sessionId": {
+                    "type": "string",
+                    "description": "Session ID to clear context for"
+                }
+            }
+        },
+        {
+            "name": "mcp_gemini_context_add_context",
+            "description": "Add a new entry to the context",
+            "parameters": {
+                "content": {
+                    "type": "string",
+                    "description": "The content to add to context"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": ["user", "assistant", "system"],
+                    "description": "Role of the context entry"
+                },
+                "metadata": {
+                    "type": "object",
+                    "properties": {
+                        "topic": {
+                            "type": "string",
+                            "description": "Topic for context organization"
+                        },
+                        "tags": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "Tags for context categorization"
+                        }
+                    },
+                    "description": "Metadata for context tracking"
+                }
+            }
+        },
+        {
+            "name": "mcp_gemini_context_search_context",
+            "description": "Search for relevant context using semantic similarity",
+            "parameters": {
+                "query": {
+                    "type": "string",
+                    "description": "The search query to find relevant context"
+                },
+                "limit": {
+                    "type": "number",
+                    "description": "Maximum number of context entries to return"
+                }
+            }
+        },
+        {
+            "name": "mcp_gemini_context_create_cache",
+            "description": "Create a cache for frequently used large contexts",
+            "parameters": {
+                "displayName": {
+                    "type": "string",
+                    "description": "Friendly name for the cache"
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Large context to cache (system instructions, documents, etc)"
+                },
+                "ttlSeconds": {
+                    "type": "number",
+                    "description": "Time to live in seconds (default: 3600)"
+                }
+            }
+        },
+        {
+            "name": "mcp_gemini_context_generate_with_cache",
+            "description": "Generate content using a cached context",
+            "parameters": {
+                "cacheName": {
+                    "type": "string",
+                    "description": "The cache name/ID from createCache"
+                },
+                "userPrompt": {
+                    "type": "string",
+                    "description": "The user prompt to append to the cached context"
+                }
+            }
+        },
+        {
+            "name": "mcp_gemini_context_list_caches",
+            "description": "List all available caches",
+            "parameters": {}
+        },
+        {
+            "name": "mcp_gemini_context_update_cache_ttl",
+            "description": "Updates a cache's TTL",
+            "parameters": {
+                "cacheName": {
+                    "type": "string",
+                    "description": "Cache name/ID"
+                },
+                "ttlSeconds": {
+                    "type": "number",
+                    "description": "New TTL in seconds"
+                }
+            }
+        },
+        {
+            "name": "mcp_gemini_context_delete_cache",
+            "description": "Deletes a cache",
+            "parameters": {
+                "cacheName": {
+                    "type": "string",
+                    "description": "Cache name/ID"
+                }
+            }
+        },
+        {
+            "name": "discover_capabilities",
+            "description": "Returns a manifest describing all capabilities of this MCP server",
+            "parameters": {}
+        },
+        {
+            "name": "get_tool_help",
+            "description": "Get detailed help and examples for a specific tool",
+            "parameters": {
+                "toolName": {
+                    "type": "string",
+                    "description": "Name of the tool to get help for"
+                }
+            }
+        }
+    ]
+};
+
 // Define the request handler extra type to match the SDK
 interface RequestHandlerExtra {
     sessionId?: string;
@@ -14,12 +182,24 @@ interface RequestHandlerExtra {
 }
 
 // Load manifest file if it exists
-function loadManifest(): any {
+export function loadManifest(): any {
     try {
         const manifestPath = path.resolve(process.cwd(), 'mcp-manifest.json');
+        Logger.info(`Looking for manifest at: ${manifestPath}`);
+        
         if (fs.existsSync(manifestPath)) {
+            Logger.info('Manifest file found');
             const manifestContent = fs.readFileSync(manifestPath, 'utf8');
-            return JSON.parse(manifestContent);
+            try {
+                const parsedManifest = JSON.parse(manifestContent);
+                Logger.info('Manifest successfully parsed');
+                return parsedManifest;
+            } catch (parseError) {
+                Logger.error('Failed to parse manifest JSON:', parseError);
+                return null;
+            }
+        } else {
+            Logger.error(`Manifest file not found at path: ${manifestPath}`);
         }
     } catch (error) {
         Logger.error('Error loading manifest:', error);
@@ -31,12 +211,34 @@ export async function startServer() {
     try {
         Logger.setOutputStream(process.stderr);
         Logger.info('Starting MCP server...');
+        Logger.info(`Current working directory: ${process.cwd()}`);
 
         // Initialize the Gemini Context Server
         const geminiServer = new GeminiContextServer();
 
         // Load manifest
-        const manifest = loadManifest();
+        let manifest = loadManifest();
+        
+        // If manifest is still not loaded, try alternate locations
+        if (!manifest) {
+            Logger.info('Attempting to load manifest from absolute path');
+            // Try to load from the directory where this file is located
+            const dirPath = path.dirname(new URL(import.meta.url).pathname);
+            const altPath = path.join(dirPath, '..', 'mcp-manifest.json');
+            
+            Logger.info(`Trying alternate path: ${altPath}`);
+            if (fs.existsSync(altPath)) {
+                try {
+                    const manifestContent = fs.readFileSync(altPath, 'utf8');
+                    manifest = JSON.parse(manifestContent);
+                    Logger.info('Loaded manifest from alternate path');
+                } catch (error) {
+                    Logger.error('Error loading manifest from alternate path:', error);
+                }
+            } else {
+                Logger.error(`Alternate manifest file not found at: ${altPath}`);
+            }
+        }
         
         // Create and configure the MCP server
         const server = new McpServer({
@@ -295,15 +497,43 @@ export async function startServer() {
             {},
             async () => {
                 try {
+                    // If manifest isn't loaded, try loading it again
+                    if (!manifest) {
+                        Logger.info('Manifest not loaded, attempting to load it again');
+                        const reloadedManifest = loadManifest();
+                        if (reloadedManifest) {
+                            return {
+                                content: [{
+                                    type: 'text',
+                                    text: JSON.stringify(reloadedManifest, null, 2)
+                                }]
+                            };
+                        } else {
+                            Logger.info('Using fallback manifest');
+                            return {
+                                content: [{
+                                    type: 'text',
+                                    text: JSON.stringify(FALLBACK_MANIFEST, null, 2)
+                                }]
+                            };
+                        }
+                    }
+                    
                     return {
                         content: [{
                             type: 'text',
-                            text: manifest ? JSON.stringify(manifest, null, 2) : '{"error": "Manifest not available"}'
+                            text: manifest ? JSON.stringify(manifest, null, 2) : JSON.stringify(FALLBACK_MANIFEST, null, 2)
                         }]
                     };
                 } catch (error) {
                     Logger.error('Error in discovery endpoint:', error);
-                    throw error;
+                    // Return fallback manifest even on error
+                    return {
+                        content: [{
+                            type: 'text',
+                            text: JSON.stringify(FALLBACK_MANIFEST, null, 2)
+                        }]
+                    };
                 }
             }
         );
@@ -317,7 +547,9 @@ export async function startServer() {
             },
             async (args: { toolName: string }) => {
                 try {
-                    if (!manifest || !manifest.tools) {
+                    const manifestToUse = manifest || FALLBACK_MANIFEST;
+                    
+                    if (!manifestToUse || !manifestToUse.tools) {
                         return {
                             content: [{
                                 type: 'text',
@@ -326,7 +558,7 @@ export async function startServer() {
                         };
                     }
 
-                    const toolInfo = manifest.tools.find((tool: any) => tool.name === args.toolName);
+                    const toolInfo = manifestToUse.tools.find((tool: any) => tool.name === args.toolName);
                     
                     if (!toolInfo) {
                         return {
