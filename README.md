@@ -50,6 +50,16 @@ npm run build
 node dist/mcp-server.js
 ```
 
+### MCP Client Integration
+
+This MCP server can be integrated with various MCP-compatible clients:
+
+- **Claude Desktop** - Add as an MCP server in Claude settings
+- **Cursor** - Configure in Cursor's AI/MCP settings
+- **VS Code** - Use with MCP-compatible extensions
+
+For detailed integration instructions with each client, see the [MCP Client Configuration Guide](README-MCP.md#-configuring-with-popular-mcp-clients) in the MCP documentation.
+
 ## 💻 Usage Examples
 
 ### For Beginners

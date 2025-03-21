@@ -39,6 +39,70 @@ Cursor supports MCP servers. To connect this server to Cursor:
 2. Ensure the server is running when Cursor attempts to connect
 3. Cursor will automatically discover available tools through the manifest
 
+## 🔌 Configuring with Popular MCP Clients
+
+This section provides detailed instructions for configuring this MCP server with various popular MCP clients.
+
+### Claude Desktop
+
+To configure the Gemini Context MCP server with Claude Desktop:
+
+1. **Start the MCP server** by running `npm run start` or using the `start-server.sh` script
+2. **Open Claude Desktop** and navigate to Settings (gear icon)
+3. **Go to the MCP section** in the settings panel
+4. **Add a new MCP server** with the following details:
+   - **Name**: Gemini Context MCP
+   - **Endpoint**: If running locally, set it to use stdio or localhost with the appropriate port (default: 3000)
+   - **Authentication**: Configure if you've set up authentication (see Authentication section below)
+5. **Save the configuration** and restart Claude Desktop if required
+6. **Verify the connection** by checking if the Gemini Context tools appear in the available tools list
+
+### Cursor
+
+To configure the Gemini Context MCP server with Cursor:
+
+1. **Start the MCP server** using `npm run start` or the provided script
+2. **Open Cursor** and navigate to Settings
+3. **Find the AI/MCP section** in settings
+4. **Add a new MCP server** with these details:
+   - **Name**: Gemini Context MCP
+   - **Path**: Full path to your mcp.json file or the server directory
+5. **Save and restart Cursor** if necessary
+6. **Verify integration** by checking if the Gemini tools are available in the Cursor command palette
+
+### VS Code with MCP Extension
+
+To configure with VS Code using an MCP extension:
+
+1. **Install an MCP-compatible extension** for VS Code (such as "MCP Client" or similar)
+2. **Start the Gemini Context MCP server**
+3. **Open VS Code settings** and navigate to the MCP extension settings
+4. **Add a new MCP server configuration** with:
+   - **Name**: Gemini Context MCP
+   - **Server Type**: External Process or HTTP (depending on your setup)
+   - **Path/URL**: Path to the server executable or HTTP endpoint
+5. **Save settings** and restart VS Code if needed
+6. **Verify connection** through the extension's interface
+
+### Other MCP Clients
+
+For other MCP-compatible clients:
+
+1. **Start the Gemini Context MCP server**
+2. **Look for MCP configuration** in your client's settings or preferences
+3. **Configure using the standard MCP connection parameters**:
+   - If using stdio-based communication, point to the server executable path
+   - If using HTTP, use the server's HTTP endpoint (default: http://localhost:3000)
+4. **Ensure your client supports MCP version 1.7.0** or later for full compatibility
+
+### Authentication Setup (Optional)
+
+If you need to add authentication for secure connections:
+
+1. **Generate API keys** by creating a secure random string
+2. **Add the key** to your `.env` file as `MCP_API_KEY=your_generated_key`
+3. **Configure your MCP client** to use this key in the authentication settings
+
 ## 🧰 Available Tools
 
 This server exposes several MCP tools that can be called from any MCP client. Here's a complete guide to each tool:
