@@ -28,7 +28,7 @@ A powerful MCP (Model Context Protocol) server implementation that leverages Gem
 ```bash
 # Clone the repository
 git clone https://github.com/ogoldberg/gemini-context-mcp-server
-cd gemini-context-mcp
+cd gemini-context-mcp-server
 
 # Install dependencies
 npm install
