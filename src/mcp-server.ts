@@ -1,12 +1,12 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { HttpServerTransport } from '@modelcontextprotocol/sdk/server/http.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { z } from 'zod';
 import { GeminiContextServer } from './gemini-context-server.js';
 import { Logger } from './utils/logger.js';
-import { config } from './config.js';
 import fs from 'fs';
 import path from 'path';
+import { randomUUID } from 'crypto';
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -593,15 +593,11 @@ export async function startServer() {
         let transport;
         if (httpMode) {
             Logger.info(`Starting in HTTP mode on port ${port}`);
-            transport = new HttpServerTransport({
-                port: port,
-                cors: {
-                    origin: "*",
-                    methods: ["GET", "POST", "OPTIONS"],
-                    allowedHeaders: ["Content-Type"]
-                }
+            transport = new StreamableHTTPServerTransport({
+                sessionIdGenerator: () => randomUUID(),
+                enableJsonResponse: false
             });
-
+            
             // Log server URL
             console.log(`\n🚀 MCP server running in HTTP mode at http://localhost:${port}`);
             console.log(`Configuration: Use endpoint http://localhost:${port}/mcp in your MCP client\n`);
